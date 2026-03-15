@@ -1,0 +1,240 @@
+trigger:
+  branches:
+    include:
+      - none
+
+pr:
+  branches:
+    include:
+      - none
+
+variables:
+  buildConfiguration: Release
+  dotNetSdkVersion: 8.0.x
+  vmImageName: ubuntu-latest
+
+  # Update these in Azure DevOps Pipeline variables (or a variable group).
+  azureServiceConnection: vv-test # Name of the Azure Resource Manager service connection in Azure DevOps
+  appServiceName: vv-test-as # Name of the Azure App Service to deploy to
+  environmentName: prod
+
+stages:
+  # ============================================================
+  # Stage 1: Build
+  # ============================================================
+  - stage: CI
+    displayName: Build
+    jobs:
+      - job: Build
+        displayName: Build and publish
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - task: UseDotNet@2
+            displayName: Install .NET SDK $(dotNetSdkVersion)
+            inputs:
+              packageType: sdk
+              version: $(dotNetSdkVersion)
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore
+            inputs:
+              command: restore
+              projects: "SampleApp/**/*.csproj"
+
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs:
+              command: build
+              projects: "SampleApp/**/*.csproj"
+              arguments: "--configuration $(buildConfiguration) --no-restore"
+
+          - task: DotNetCoreCLI@2
+            displayName: Publish
+            inputs:
+              command: publish
+              projects: "SampleApp/**/*.csproj"
+              publishWebProjects: false
+              arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
+              zipAfterPublish: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish pipeline artifact
+            inputs:
+              targetPath: "$(Build.ArtifactStagingDirectory)"
+              artifact: webapp
+              publishLocation: pipeline
+
+  # ============================================================
+  # Stage 2: Security Scans (DevSecOps)
+  # ============================================================
+  - stage: Security
+    displayName: Security Scans
+    dependsOn: CI
+    condition: succeeded()
+    jobs:
+      # ------- Job 1: Secret Detection with Gitleaks -------
+      - job: SecretScan
+        displayName: Secret Detection (Gitleaks)
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - checkout: self
+            fetchDepth: '0'
+
+          - script: |
+              GITLEAKS_VERSION="8.18.4"
+              wget -q "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -O gitleaks.tar.gz
+              tar -xzf gitleaks.tar.gz
+              chmod +x gitleaks
+            displayName: Install Gitleaks
+
+          - script: |
+              ./gitleaks detect --source . --report-format sarif --report-path $(Build.ArtifactStagingDirectory)/gitleaks-report.sarif --exit-code 1
+            displayName: Run Gitleaks secret scan
+            continueOnError: 'true'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Gitleaks report
+            condition: always()
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: gitleaks-report
+              publishLocation: pipeline
+
+      # ------- Job 2: SCA — Dependency Vulnerability Scan with Trivy -------
+      - job: DependencyScan
+        displayName: Dependency Scan (Trivy)
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            displayName: Install .NET SDK $(dotNetSdkVersion)
+            inputs:
+              packageType: sdk
+              version: $(dotNetSdkVersion)
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore packages
+            inputs:
+              command: restore
+              projects: "SampleApp/**/*.csproj"
+
+          - script: |
+              TRIVY_VERSION="0.52.0"
+              wget -q "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O trivy.tar.gz
+              tar -xzf trivy.tar.gz
+              chmod +x trivy
+            displayName: Install Trivy
+
+          - script: |
+              ./trivy filesystem --scanners vuln --severity HIGH,CRITICAL --format table --output $(Build.ArtifactStagingDirectory)/trivy-report.txt .
+              TRIVY_EXIT=$?
+              ./trivy filesystem --scanners vuln --severity HIGH,CRITICAL --format sarif --output $(Build.ArtifactStagingDirectory)/trivy-report.sarif .
+              exit $TRIVY_EXIT
+            displayName: Run Trivy dependency scan
+            continueOnError: 'true'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Trivy report
+            condition: always()
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: trivy-report
+              publishLocation: pipeline
+
+      # ------- Job 3: SAST — Static Analysis with Security Code Scan -------
+      - job: SAST
+        displayName: SAST (Security Code Scan)
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            displayName: Install .NET SDK $(dotNetSdkVersion)
+            inputs:
+              packageType: sdk
+              version: $(dotNetSdkVersion)
+
+          - script: |
+              dotnet tool install --global security-scan
+            displayName: Install Security Code Scan
+
+          - script: |
+              export PATH="$PATH:$HOME/.dotnet/tools"
+              security-scan SampleApp/SampleApp.csproj --export=$(Build.ArtifactStagingDirectory)/sast-report.sarif || true
+            displayName: Run SAST analysis
+            continueOnError: 'true'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish SAST report
+            condition: always()
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: sast-report
+              publishLocation: pipeline
+
+      # ------- Job 4: OWASP Dependency-Check (NVD-based) -------
+      - job: OWASPDependencyCheck
+        displayName: OWASP Dependency-Check
+        pool:
+          vmImage: $(vmImageName)
+        steps:
+          - checkout: self
+
+          - script: |
+              DC_VERSION="10.0.3"
+              wget -q "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip" -O dc.zip
+              unzip -q dc.zip
+            displayName: Install OWASP Dependency-Check
+
+          - script: |
+              ./dependency-check/bin/dependency-check.sh \
+                --project "SampleApp" \
+                --scan ./SampleApp \
+                --format HTML \
+                --format JSON \
+                --out $(Build.ArtifactStagingDirectory)/dependency-check \
+                --failOnCVSS 9 \
+                --enableExperimental
+            displayName: Run OWASP Dependency-Check
+            continueOnError: 'true'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Dependency-Check report
+            condition: always()
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)/dependency-check
+              artifact: owasp-dependency-check-report
+              publishLocation: pipeline
+
+  # ============================================================
+  # Stage 3: Deploy
+  # ============================================================
+  - stage: CD
+    displayName: Deploy
+    dependsOn: Security
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToAppService
+        displayName: Deploy to Azure App Service
+        environment: $(environmentName)
+        pool:
+          vmImage: $(vmImageName)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: webapp
+
+                - task: AzureWebApp@1
+                  displayName: Deploy package to App Service
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    appType: webApp
+                    appName: $(appServiceName)
+                    package: "$(Pipeline.Workspace)/webapp/**/*.zip"

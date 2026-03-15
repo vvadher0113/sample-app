@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SampleApp - Azure App Service</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div class="bg-particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">&#9889;</span> SampleApp
+        </div>
+        <div class="nav-links">
+            <a href="#hero">Home</a>
+            <a href="#weather">Weather</a>
+            <a href="#info">App Info</a>
+            <a href="/swagger" target="_blank">API Docs</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">Powered by .NET 8 &amp; Azure</div>
+            <h1 class="hero-title">
+                Welcome to<br>
+                <span class="gradient-text">SampleApp</span>
+            </h1>
+            <p class="hero-subtitle">
+                A modern web application running on Azure App Service,
+                deployed via Azure DevOps Pipelines.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="document.getElementById('weather').scrollIntoView({behavior:'smooth'})">
+                    View Weather &#127782;&#65039;
+                </button>
+                <button class="btn btn-outline" onclick="document.getElementById('info').scrollIntoView({behavior:'smooth'})">
+                    App Info &#128300;
+                </button>
+            </div>
+            <div class="tech-stack">
+                <div class="tech-chip">.NET 8</div>
+                <div class="tech-chip">Azure App Service</div>
+                <div class="tech-chip">Azure DevOps</div>
+                <div class="tech-chip">CI/CD Pipeline</div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-card card-1">&#9729;&#65039; Cloud Native</div>
+            <div class="floating-card card-2">&#128640; Fast Deploys</div>
+            <div class="floating-card card-3">&#128274; Secure</div>
+            <div class="orbit-ring"></div>
+            <div class="center-icon">&#9889;</div>
+        </div>
+    </section>
+
+    <!-- Weather Section -->
+    <section id="weather" class="section weather-section">
+        <div class="section-header">
+            <h2>7-Day Weather Forecast</h2>
+            <p>Live data from the <code>/api/weatherforecast</code> endpoint</p>
+        </div>
+        <div class="weather-grid" id="weatherGrid">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading forecast...</p>
+            </div>
+        </div>
+        <div class="weather-actions">
+            <button class="btn btn-primary" onclick="loadWeather()">&#128260; Refresh Forecast</button>
+        </div>
+    </section>
+
+    <!-- App Info Section -->
+    <section id="info" class="section info-section">
+        <div class="section-header">
+            <h2>Application Info</h2>
+            <p>Real-time details from the <code>/api/info</code> endpoint</p>
+        </div>
+        <div class="info-grid" id="infoGrid">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading info...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section features-section">
+        <div class="section-header">
+            <h2>Architecture Highlights</h2>
+            <p>Built with modern best practices</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">&#128640;</div>
+                <h3>CI/CD Pipeline</h3>
+                <p>Automated build and deploy via Azure DevOps YAML pipelines with staging environments.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#9889;</div>
+                <h3>Minimal API</h3>
+                <p>.NET 8 Minimal APIs for lightweight, high-performance HTTP endpoints.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128274;</div>
+                <h3>Secure by Default</h3>
+                <p>HTTPS redirection, managed identity ready, and Azure-native security.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128200;</div>
+                <h3>OpenAPI / Swagger</h3>
+                <p>Auto-generated API docs with Swagger UI for easy testing and exploration.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#9729;&#65039;</div>
+                <h3>Cloud Native</h3>
+                <p>Designed for Azure App Service with full platform integration.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128230;</div>
+                <h3>Artifact Publishing</h3>
+                <p>Pipeline artifacts published and version-tracked for reliable deployments.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&#9889; SampleApp &mdash; Built with .NET 8 | Deployed on Azure App Service</p>
+            <p class="footer-sub">Azure DevOps CI/CD Pipeline Demo</p>
+        </div>
+    </footer>
+
+    <script src="js/site.js"></script>
+</body>
+</html>
