@@ -123,16 +123,14 @@ stages:
               projects: "SampleApp/**/*.csproj"
 
           - script: |
-              TRIVY_VERSION="0.52.0"
-              wget -q "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O trivy.tar.gz
-              tar -xzf trivy.tar.gz
-              chmod +x trivy
+              curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+              trivy --version
             displayName: Install Trivy
 
           - script: |
-              ./trivy filesystem --scanners vuln --severity HIGH,CRITICAL --format table --output $(Build.ArtifactStagingDirectory)/trivy-report.txt .
+              trivy filesystem --scanners vuln --severity HIGH,CRITICAL --format table --output $(Build.ArtifactStagingDirectory)/trivy-report.txt .
               TRIVY_EXIT=$?
-              ./trivy filesystem --scanners vuln --severity HIGH,CRITICAL --format sarif --output $(Build.ArtifactStagingDirectory)/trivy-report.sarif .
+              trivy filesystem --scanners vuln --severity HIGH,CRITICAL --format sarif --output $(Build.ArtifactStagingDirectory)/trivy-report.sarif .
               exit $TRIVY_EXIT
             displayName: Run Trivy dependency scan
             continueOnError: 'true'
