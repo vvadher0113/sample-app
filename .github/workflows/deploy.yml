@@ -181,6 +181,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, secret-scan, dependency-scan, sast, dotnet-audit]
     environment: production
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
