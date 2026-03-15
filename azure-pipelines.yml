@@ -15,7 +15,7 @@ variables:
 
   # Update these in Azure DevOps Pipeline variables (or a variable group).
   azureServiceConnection: vv-test # Name of the Azure Resource Manager service connection in Azure DevOps
-  appServiceName: vv-test-as # Name of the Azure App Service to deploy to
+  appServiceName: sample-vv-app  # Name of the Azure App Service to deploy to
   environmentName: prod
 
 stages:
