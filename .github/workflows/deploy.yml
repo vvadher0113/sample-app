@@ -14,6 +14,7 @@ env:
 
 permissions:
   contents: read
+  id-token: write # Required for Azure OIDC login
   security-events: write # Required for uploading SARIF to GitHub Security tab
 
 jobs:
@@ -139,30 +140,38 @@ jobs:
           category: "/language:csharp"
 
   # ============================================================
-  # Job 5: OWASP Dependency-Check
+  # Job 5: .NET Package Vulnerability Audit
   # ============================================================
-  owasp-dependency-check:
-    name: OWASP Dependency-Check
+  dotnet-audit:
+    name: .NET Package Vulnerability Audit
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
         with:
-          project: SampleApp
-          path: ./SampleApp
-          format: HTML
-          args: --failOnCVSS 9 --enableExperimental
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore SampleApp/SampleApp.csproj
+
+      - name: Run .NET package vulnerability audit
+        run: |
+          echo "=== .NET Package Vulnerability Audit ===" > dotnet-audit-report.txt
+          dotnet list SampleApp/SampleApp.csproj package --vulnerable --include-transitive 2>&1 | tee -a dotnet-audit-report.txt
+          echo "" >> dotnet-audit-report.txt
+          echo "=== .NET Package Deprecation Check ===" >> dotnet-audit-report.txt
+          dotnet list SampleApp/SampleApp.csproj package --deprecated 2>&1 | tee -a dotnet-audit-report.txt
         continue-on-error: true
 
-      - name: Upload Dependency-Check report
+      - name: Upload audit report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: owasp-dependency-check-report
-          path: reports/
+          name: dotnet-audit-report
+          path: dotnet-audit-report.txt
 
   # ============================================================
   # Job 6: Deploy to Azure App Service
@@ -170,7 +179,7 @@ jobs:
   deploy:
     name: Deploy to Azure App Service
     runs-on: ubuntu-latest
-    needs: [build, secret-scan, dependency-scan, sast, owasp-dependency-check]
+    needs: [build, secret-scan, dependency-scan, sast, dotnet-audit]
     environment: production
     steps:
       - name: Download build artifact
@@ -179,9 +188,15 @@ jobs:
           name: webapp
           path: ./webapp
 
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.APP_SERVICE_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ./webapp

@@ -175,38 +175,42 @@ stages:
               artifact: sast-report
               publishLocation: pipeline
 
-      # ------- Job 4: OWASP Dependency-Check (NVD-based) -------
-      - job: OWASPDependencyCheck
-        displayName: OWASP Dependency-Check
+      # ------- Job 4: .NET Vulnerable Package Audit -------
+      - job: DotNetAudit
+        displayName: .NET Package Vulnerability Audit
         pool:
           vmImage: $(vmImageName)
         steps:
           - checkout: self
 
-          - script: |
-              DC_VERSION="10.0.3"
-              wget -q "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip" -O dc.zip
-              unzip -q dc.zip
-            displayName: Install OWASP Dependency-Check
+          - task: UseDotNet@2
+            displayName: Install .NET SDK $(dotNetSdkVersion)
+            inputs:
+              packageType: sdk
+              version: $(dotNetSdkVersion)
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore packages
+            inputs:
+              command: restore
+              projects: "SampleApp/**/*.csproj"
 
           - script: |
-              ./dependency-check/bin/dependency-check.sh \
-                --project "SampleApp" \
-                --scan ./SampleApp \
-                --format HTML \
-                --format JSON \
-                --out $(Build.ArtifactStagingDirectory)/dependency-check \
-                --failOnCVSS 9 \
-                --enableExperimental
-            displayName: Run OWASP Dependency-Check
+              echo "=== .NET Package Vulnerability Audit ===" > $(Build.ArtifactStagingDirectory)/dotnet-audit-report.txt
+              echo "" >> $(Build.ArtifactStagingDirectory)/dotnet-audit-report.txt
+              dotnet list SampleApp/SampleApp.csproj package --vulnerable --include-transitive 2>&1 | tee -a $(Build.ArtifactStagingDirectory)/dotnet-audit-report.txt
+              echo "" >> $(Build.ArtifactStagingDirectory)/dotnet-audit-report.txt
+              echo "=== .NET Package Deprecation Check ===" >> $(Build.ArtifactStagingDirectory)/dotnet-audit-report.txt
+              dotnet list SampleApp/SampleApp.csproj package --deprecated 2>&1 | tee -a $(Build.ArtifactStagingDirectory)/dotnet-audit-report.txt
+            displayName: Run .NET package vulnerability audit
             continueOnError: 'true'
 
           - task: PublishPipelineArtifact@1
-            displayName: Publish Dependency-Check report
+            displayName: Publish audit report
             condition: always()
             inputs:
-              targetPath: $(Build.ArtifactStagingDirectory)/dependency-check
-              artifact: owasp-dependency-check-report
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: dotnet-audit-report
               publishLocation: pipeline
 
   # ============================================================
