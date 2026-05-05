@@ -1,205 +1,213 @@
-name: Build, Security Scan & Deploy to Azure App Service
+name: CI/CD - Build, Scan, Deploy (.NET to Azure App Service)
 
 on:
-  workflow_dispatch: # Manual trigger
-  # Uncomment below to trigger on push
-  # push:
-  #   branches: [ main ]
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: sample-app-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-  DOTNET_VERSION: "8.0.x"
+  DOTNET_VERSION: 8.0.x
   BUILD_CONFIGURATION: Release
-  APP_SERVICE_NAME: vv-test-gh-as # Update with your Azure App Service name
-  AZURE_WEBAPP_PACKAGE_PATH: ./publish
+  APP_SERVICE_NAME: virtix-sampleapp
+  PROJECT_PATH: SampleApp/SampleApp.csproj
 
 permissions:
   contents: read
-  id-token: write # Required for Azure OIDC login
-  security-events: write # Required for uploading SARIF to GitHub Security tab
 
 jobs:
-  # ============================================================
-  # Job 1: Build
-  # ============================================================
   build:
-    name: Build & Publish
+    name: Build & Package
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
 
-      - name: Restore dependencies
-        run: dotnet restore SampleApp/SampleApp.csproj
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
 
       - name: Build
-        run: dotnet build SampleApp/SampleApp.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
       - name: Publish
-        run: dotnet publish SampleApp/SampleApp.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --output ./publish
 
-      - name: Upload build artifact
+      - name: Create deployment package
+        run: |
+          cd publish
+          zip -r ../webapp.zip .
+
+      - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
-          name: webapp
-          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          name: webapp-package
+          path: webapp.zip
+          if-no-files-found: error
 
-  # ============================================================
-  # Job 2: Secret Detection (Gitleaks)
-  # ============================================================
-  secret-scan:
-    name: Secret Detection (Gitleaks)
+  dependency-review:
+    name: Dependency Review (PR)
     runs-on: ubuntu-latest
-    needs: build
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
-        continue-on-error: true
-        env:
-          GITLEAKS_LICENSE: "" # No license needed for public repos
 
-  # ============================================================
-  # Job 3: Dependency Scan (Trivy)
-  # ============================================================
   dependency-scan:
     name: Dependency Scan (Trivy)
     runs-on: ubuntu-latest
-    needs: build
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore dependencies
-        run: dotnet restore SampleApp/SampleApp.csproj
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+      - name: Run Trivy (gate on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: .
           scanners: vuln
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
           format: table
-        continue-on-error: true
 
-      - name: Run Trivy (SARIF output)
-        uses: aquasecurity/trivy-action@master
+      - name: Run Trivy (SARIF)
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: .
           scanners: vuln
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
           format: sarif
           output: trivy-results.sarif
-        continue-on-error: true
+          exit-code: 0
 
-      - name: Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Trivy SARIF
         if: always()
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
-        continue-on-error: true
 
-  # ============================================================
-  # Job 4: SAST — CodeQL Analysis
-  # ============================================================
   sast:
     name: SAST (CodeQL)
     runs-on: ubuntu-latest
-    needs: build
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: csharp
 
-      - name: Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Build for CodeQL
-        run: dotnet build SampleApp/SampleApp.csproj --configuration ${{ env.BUILD_CONFIGURATION }}
+        run: dotnet build ${{ env.PROJECT_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }}
 
-      - name: Perform CodeQL Analysis
+      - name: Analyze with CodeQL
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:csharp"
+          category: /language:csharp
 
-  # ============================================================
-  # Job 5: .NET Package Vulnerability Audit
-  # ============================================================
   dotnet-audit:
-    name: .NET Package Vulnerability Audit
+    name: .NET Package Audit
     runs-on: ubuntu-latest
-    needs: build
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
-        run: dotnet restore SampleApp/SampleApp.csproj
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
 
-      - name: Run .NET package vulnerability audit
+      - name: Run package audit
         run: |
-          echo "=== .NET Package Vulnerability Audit ===" > dotnet-audit-report.txt
-          dotnet list SampleApp/SampleApp.csproj package --vulnerable --include-transitive 2>&1 | tee -a dotnet-audit-report.txt
-          echo "" >> dotnet-audit-report.txt
-          echo "=== .NET Package Deprecation Check ===" >> dotnet-audit-report.txt
-          dotnet list SampleApp/SampleApp.csproj package --deprecated 2>&1 | tee -a dotnet-audit-report.txt
-        continue-on-error: true
+          dotnet list ${{ env.PROJECT_PATH }} package --vulnerable --include-transitive
+          dotnet list ${{ env.PROJECT_PATH }} package --deprecated
 
-      - name: Upload audit report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: dotnet-audit-report
-          path: dotnet-audit-report.txt
-
-  # ============================================================
-  # Job 6: Deploy to Azure App Service
-  # ============================================================
   deploy:
     name: Deploy to Azure App Service
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name != 'pull_request'
     needs: [build, secret-scan, dependency-scan, sast, dotnet-audit]
     environment: production
     permissions:
-      id-token: write
       contents: read
+      id-token: write
     steps:
-      - name: Download build artifact
+      - name: Download deployment artifact
         uses: actions/download-artifact@v4
         with:
-          name: webapp
-          path: ./webapp
+          name: webapp-package
+          path: .
 
-      - name: Azure Login
+      - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.APP_SERVICE_NAME }}
-          package: ./webapp
+          package: webapp.zip

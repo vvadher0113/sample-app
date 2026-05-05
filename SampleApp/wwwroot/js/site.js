@@ -81,6 +81,95 @@ async function loadInfo() {
     }
 }
 
+async function loadCurrentUser() {
+    const target = document.getElementById('authResult');
+    target.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading user profile...</p></div>';
+
+    try {
+        const res = await fetch('/api/me');
+        const contentType = res.headers.get('content-type') || '';
+
+        if (!res.ok || !contentType.includes('application/json')) {
+            target.innerHTML = '<div class="info-card"><div class="info-label">Result</div><div class="info-value">Not authenticated. Use Sign In first.</div></div>';
+            return;
+        }
+
+        const data = await res.json();
+        target.innerHTML = `
+            <div class="info-card">
+                <div class="info-label">Authenticated User</div>
+                <div class="info-value">${data.name || 'Unknown'}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Roles</div>
+                <div class="info-value">${(data.roles || []).join(', ') || 'None'}</div>
+            </div>
+        `;
+    } catch (err) {
+        target.innerHTML = '<div class="info-card"><div class="info-label">Error</div><div class="info-value">Unable to call /api/me.</div></div>';
+    }
+}
+
+async function loadReaderAccess() {
+    const target = document.getElementById('authResult');
+    target.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Checking App.Reader/App.Admin access...</p></div>';
+
+    try {
+        const res = await fetch('/api/reader');
+        const contentType = res.headers.get('content-type') || '';
+
+        if (res.status === 403) {
+            target.innerHTML = '<div class="info-card"><div class="info-label">Authorization</div><div class="info-value">Signed in, but missing App.Reader/App.Admin role.</div></div>';
+            return;
+        }
+
+        if (!res.ok || !contentType.includes('application/json')) {
+            target.innerHTML = '<div class="info-card"><div class="info-label">Authorization</div><div class="info-value">Not authenticated. Use Sign In first.</div></div>';
+            return;
+        }
+
+        const data = await res.json();
+        target.innerHTML = `
+            <div class="info-card">
+                <div class="info-label">Authorization</div>
+                <div class="info-value">${data.message}</div>
+            </div>
+        `;
+    } catch (err) {
+        target.innerHTML = '<div class="info-card"><div class="info-label">Error</div><div class="info-value">Unable to call /api/reader.</div></div>';
+    }
+}
+
+async function loadAdminAccess() {
+    const target = document.getElementById('authResult');
+    target.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Checking App.Admin access...</p></div>';
+
+    try {
+        const res = await fetch('/api/admin');
+        const contentType = res.headers.get('content-type') || '';
+
+        if (res.status === 403) {
+            target.innerHTML = '<div class="info-card"><div class="info-label">Authorization</div><div class="info-value">Signed in, but missing App.Admin role.</div></div>';
+            return;
+        }
+
+        if (!res.ok || !contentType.includes('application/json')) {
+            target.innerHTML = '<div class="info-card"><div class="info-label">Authorization</div><div class="info-value">Not authenticated. Use Sign In first.</div></div>';
+            return;
+        }
+
+        const data = await res.json();
+        target.innerHTML = `
+            <div class="info-card">
+                <div class="info-label">Authorization</div>
+                <div class="info-value">${data.message}</div>
+            </div>
+        `;
+    } catch (err) {
+        target.innerHTML = '<div class="info-card"><div class="info-label">Error</div><div class="info-value">Unable to call /api/admin.</div></div>';
+    }
+}
+
 // Navbar scroll effect
 window.addEventListener('scroll', () => {
     const nav = document.querySelector('.navbar');
@@ -91,4 +180,5 @@ window.addEventListener('scroll', () => {
 document.addEventListener('DOMContentLoaded', () => {
     loadWeather();
     loadInfo();
+    loadCurrentUser();
 });

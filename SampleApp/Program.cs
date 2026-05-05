@@ -1,7 +1,46 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Identity.Web;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var entraSection = builder.Configuration.GetSection("EntraExternalId");
+var ciamInstance = entraSection["Instance"]?.TrimEnd('/');
+var ciamTenantId = entraSection["TenantId"];
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
+    .AddMicrosoftIdentityWebApp(options =>
+    {
+        entraSection.Bind(options);
+
+        if (!string.IsNullOrWhiteSpace(ciamInstance) && !string.IsNullOrWhiteSpace(ciamTenantId))
+        {
+            var authority = $"{ciamInstance}/{ciamTenantId}/v2.0";
+            options.Authority = authority;
+            options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
+        }
+
+        options.TokenValidationParameters.RoleClaimType = "roles";
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdminRole", policy =>
+        policy.RequireRole("App.Admin"));
+
+    options.AddPolicy("RequireReaderOrAdmin", policy =>
+        policy.RequireRole("App.Reader", "App.Admin"));
+});
 
 var app = builder.Build();
 
@@ -14,6 +53,26 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGet("/auth/signin", async (HttpContext context, string? returnUrl) =>
+{
+    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+    await context.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme, new AuthenticationProperties
+    {
+        RedirectUri = redirectUrl
+    });
+});
+
+app.MapGet("/auth/signout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    await context.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, new AuthenticationProperties
+    {
+        RedirectUri = "/"
+    });
+});
 
 app.MapGet("/api/info", () => new
 {
@@ -23,6 +82,33 @@ app.MapGet("/api/info", () => new
     Environment = app.Environment.EnvironmentName,
     Time = DateTime.UtcNow
 });
+
+app.MapGet("/api/me", (ClaimsPrincipal user) =>
+{
+    var roles = user.Claims
+        .Where(c => c.Type is "roles" or ClaimTypes.Role)
+        .Select(c => c.Value)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    return Results.Ok(new
+    {
+        Name = user.Identity?.Name,
+        Authenticated = user.Identity?.IsAuthenticated ?? false,
+        Roles = roles,
+        Claims = user.Claims.Select(c => new { c.Type, c.Value })
+    });
+}).RequireAuthorization();
+
+app.MapGet("/api/admin", () => Results.Ok(new
+{
+    Message = "You have App.Admin role access."
+})).RequireAuthorization("RequireAdminRole");
+
+app.MapGet("/api/reader", () => Results.Ok(new
+{
+    Message = "You have App.Reader or App.Admin role access."
+})).RequireAuthorization("RequireReaderOrAdmin");
 
 app.MapGet("/api/weatherforecast", () =>
 {

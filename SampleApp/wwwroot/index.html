@@ -17,6 +17,7 @@
         </div>
         <div class="nav-links">
             <a href="#hero">Home</a>
+            <a href="#auth">Auth</a>
             <a href="#weather">Weather</a>
             <a href="#info">App Info</a>
             <a href="/swagger" target="_blank">API Docs</a>
@@ -57,6 +58,22 @@
             <div class="orbit-ring"></div>
             <div class="center-icon">&#9889;</div>
         </div>
+    </section>
+
+    <!-- Auth Test Section -->
+    <section id="auth" class="section info-section">
+        <div class="section-header">
+            <h2>Authentication &amp; Role Access Test</h2>
+            <p>Use these actions to validate Entra External ID login and role-based access.</p>
+        </div>
+        <div class="hero-buttons" style="justify-content:center; margin-bottom: 1rem;">
+            <button class="btn btn-primary" onclick="window.location.href='/auth/signin?returnUrl=/'">Sign In</button>
+            <button class="btn btn-outline" onclick="window.location.href='/auth/signout'">Sign Out</button>
+            <button class="btn btn-outline" onclick="loadCurrentUser()">Check /api/me</button>
+            <button class="btn btn-outline" onclick="loadReaderAccess()">Check /api/reader</button>
+            <button class="btn btn-outline" onclick="loadAdminAccess()">Check /api/admin</button>
+        </div>
+        <div id="authResult" class="info-grid"></div>
     </section>
 
     <!-- Weather Section -->
