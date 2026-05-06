@@ -7,21 +7,34 @@ using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var entraSection = builder.Configuration.GetSection("EntraExternalId");
-var ciamInstance = entraSection["Instance"]?.TrimEnd('/');
-var ciamTenantId = entraSection["TenantId"];
+const string internalOidcScheme = "InternalOidc";
+const string externalOidcScheme = "ExternalOidc";
+
+var internalEntraSection = builder.Configuration.GetSection("EntraInternal");
+var externalEntraSection = builder.Configuration.GetSection("EntraExternalId");
+var ciamInstance = externalEntraSection["Instance"]?.TrimEnd('/');
+var ciamTenantId = externalEntraSection["TenantId"];
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddAuthentication(options =>
+var authBuilder = builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-    })
-    .AddMicrosoftIdentityWebApp(options =>
+        options.DefaultChallengeScheme = externalOidcScheme;
+    });
+
+authBuilder.AddMicrosoftIdentityWebApp(options =>
     {
-        entraSection.Bind(options);
+        internalEntraSection.Bind(options);
+        options.TokenValidationParameters.RoleClaimType = "roles";
+    },
+    openIdConnectScheme: internalOidcScheme,
+    cookieScheme: CookieAuthenticationDefaults.AuthenticationScheme);
+
+authBuilder.AddMicrosoftIdentityWebApp(options =>
+    {
+        externalEntraSection.Bind(options);
 
         if (!string.IsNullOrWhiteSpace(ciamInstance) && !string.IsNullOrWhiteSpace(ciamTenantId))
         {
@@ -31,7 +44,9 @@ builder.Services.AddAuthentication(options =>
         }
 
         options.TokenValidationParameters.RoleClaimType = "roles";
-    });
+    },
+    openIdConnectScheme: externalOidcScheme,
+    cookieScheme: CookieAuthenticationDefaults.AuthenticationScheme);
 
 builder.Services.AddAuthorization(options =>
 {
@@ -56,10 +71,28 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/auth/signin/internal", async (HttpContext context, string? returnUrl) =>
+{
+    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+    await context.ChallengeAsync(internalOidcScheme, new AuthenticationProperties
+    {
+        RedirectUri = redirectUrl
+    });
+});
+
+app.MapGet("/auth/signin/external", async (HttpContext context, string? returnUrl) =>
+{
+    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+    await context.ChallengeAsync(externalOidcScheme, new AuthenticationProperties
+    {
+        RedirectUri = redirectUrl
+    });
+});
+
 app.MapGet("/auth/signin", async (HttpContext context, string? returnUrl) =>
 {
     var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
-    await context.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme, new AuthenticationProperties
+    await context.ChallengeAsync(externalOidcScheme, new AuthenticationProperties
     {
         RedirectUri = redirectUrl
     });
@@ -68,10 +101,7 @@ app.MapGet("/auth/signin", async (HttpContext context, string? returnUrl) =>
 app.MapGet("/auth/signout", async (HttpContext context) =>
 {
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    await context.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, new AuthenticationProperties
-    {
-        RedirectUri = "/"
-    });
+    context.Response.Redirect("/");
 });
 
 app.MapGet("/api/info", () => new

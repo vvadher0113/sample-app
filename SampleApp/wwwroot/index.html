@@ -64,10 +64,11 @@
     <section id="auth" class="section info-section">
         <div class="section-header">
             <h2>Authentication &amp; Role Access Test</h2>
-            <p>Use these actions to validate Entra External ID login and role-based access.</p>
+            <p>Use internal SSO for employees and External ID for third-party users.</p>
         </div>
         <div class="hero-buttons" style="justify-content:center; margin-bottom: 1rem;">
-            <button class="btn btn-primary" onclick="window.location.href='/auth/signin?returnUrl=/'">Sign In</button>
+            <button class="btn btn-primary" onclick="window.location.href='/auth/signin/internal?returnUrl=/'">Sign In (Internal)</button>
+            <button class="btn btn-primary" onclick="window.location.href='/auth/signin/external?returnUrl=/'">Sign In (External)</button>
             <button class="btn btn-outline" onclick="window.location.href='/auth/signout'">Sign Out</button>
             <button class="btn btn-outline" onclick="loadCurrentUser()">Check /api/me</button>
             <button class="btn btn-outline" onclick="loadReaderAccess()">Check /api/reader</button>
