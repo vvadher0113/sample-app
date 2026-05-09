@@ -79,6 +79,16 @@ authBuilder.AddOpenIdConnect(internalOidcScheme, options =>
         NameClaimType = "name",
         RoleClaimType = "roles"
     };
+
+    // Add custom claim to identify internal authentication
+    options.Events.OnTokenValidated = context =>
+    {
+        if (context.Principal?.Identity is System.Security.Claims.ClaimsIdentity identity)
+        {
+            identity.AddClaim(new System.Security.Claims.Claim("auth_scheme", "Internal"));
+        }
+        return Task.CompletedTask;
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -154,11 +164,14 @@ app.MapGet("/api/me", (ClaimsPrincipal user) =>
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
 
+    var authScheme = user.Claims.FirstOrDefault(c => c.Type == "auth_scheme")?.Value ?? "External";
+
     return Results.Ok(new
     {
         Name = user.Identity?.Name,
         Authenticated = user.Identity?.IsAuthenticated ?? false,
         Roles = roles,
+        AuthScheme = authScheme,
         Claims = user.Claims.Select(c => new { c.Type, c.Value })
     });
 }).RequireAuthorization();
