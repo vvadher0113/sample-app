@@ -1,17 +1,34 @@
 using System.Security.Claims;
+using Azure.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Key Vault for secrets management
+var keyVaultUrl = builder.Configuration["KeyVault:Url"];
+if (!string.IsNullOrWhiteSpace(keyVaultUrl))
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(keyVaultUrl),
+        new DefaultAzureCredential(),
+        new Azure.Extensions.AspNetCore.Configuration.Secrets.AzureKeyVaultConfigurationOptions
+        {
+            ReloadInterval = TimeSpan.FromHours(1)
+        });
+}
 
 const string internalOidcScheme = "InternalOidc";
 const string externalOidcScheme = "ExternalOidc";
 
 var internalEntraSection = builder.Configuration.GetSection("EntraInternal");
 var externalEntraSection = builder.Configuration.GetSection("EntraExternalId");
+var internalInstance = internalEntraSection["Instance"]?.TrimEnd('/');
+var internalTenantId = internalEntraSection["TenantId"];
 var ciamInstance = externalEntraSection["Instance"]?.TrimEnd('/');
 var ciamTenantId = externalEntraSection["TenantId"];
 
@@ -23,14 +40,6 @@ var authBuilder = builder.Services.AddAuthentication(options =>
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = externalOidcScheme;
     });
-
-authBuilder.AddMicrosoftIdentityWebApp(options =>
-    {
-        internalEntraSection.Bind(options);
-        options.TokenValidationParameters.RoleClaimType = "roles";
-    },
-    openIdConnectScheme: internalOidcScheme,
-    cookieScheme: CookieAuthenticationDefaults.AuthenticationScheme);
 
 authBuilder.AddMicrosoftIdentityWebApp(options =>
     {
@@ -47,6 +56,30 @@ authBuilder.AddMicrosoftIdentityWebApp(options =>
     },
     openIdConnectScheme: externalOidcScheme,
     cookieScheme: CookieAuthenticationDefaults.AuthenticationScheme);
+
+authBuilder.AddOpenIdConnect(internalOidcScheme, options =>
+{
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.ClientId = internalEntraSection["ClientId"];
+    options.ClientSecret = internalEntraSection["ClientSecret"];
+    options.CallbackPath = internalEntraSection["CallbackPath"] ?? "/signin-oidc-internal";
+    options.SignedOutCallbackPath = internalEntraSection["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+    options.ResponseType = "code";
+    options.SaveTokens = true;
+
+    if (!string.IsNullOrWhiteSpace(internalInstance) && !string.IsNullOrWhiteSpace(internalTenantId))
+    {
+        var internalAuthority = $"{internalInstance}/{internalTenantId}/v2.0";
+        options.Authority = internalAuthority;
+        options.MetadataAddress = $"{internalAuthority}/.well-known/openid-configuration";
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        NameClaimType = "name",
+        RoleClaimType = "roles"
+    };
+});
 
 builder.Services.AddAuthorization(options =>
 {
