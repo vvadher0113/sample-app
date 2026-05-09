@@ -9,17 +9,26 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Key Vault for secrets management
+// Configure Key Vault for secrets management (optional - falls back to environment variables)
 var keyVaultUrl = builder.Configuration["KeyVault:Url"];
 if (!string.IsNullOrWhiteSpace(keyVaultUrl))
 {
-    builder.Configuration.AddAzureKeyVault(
-        new Uri(keyVaultUrl),
-        new DefaultAzureCredential(),
-        new Azure.Extensions.AspNetCore.Configuration.Secrets.AzureKeyVaultConfigurationOptions
-        {
-            ReloadInterval = TimeSpan.FromHours(1)
-        });
+    try
+    {
+        builder.Configuration.AddAzureKeyVault(
+            new Uri(keyVaultUrl),
+            new DefaultAzureCredential(),
+            new Azure.Extensions.AspNetCore.Configuration.Secrets.AzureKeyVaultConfigurationOptions
+            {
+                ReloadInterval = TimeSpan.FromHours(1)
+            });
+    }
+    catch (Exception ex)
+    {
+        // Log the error and continue with environment variables
+        Console.WriteLine($"Warning: Failed to load Key Vault secrets from {keyVaultUrl}: {ex.Message}");
+        Console.WriteLine("Falling back to environment variables.");
+    }
 }
 
 const string internalOidcScheme = "InternalOidc";

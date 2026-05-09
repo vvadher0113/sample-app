@@ -83,6 +83,7 @@ async function loadInfo() {
 
 async function loadCurrentUser() {
     const target = document.getElementById('authResult');
+    const welcomeDiv = document.getElementById('welcomeMessage');
     target.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading user profile...</p></div>';
 
     try {
@@ -91,14 +92,35 @@ async function loadCurrentUser() {
 
         if (!res.ok || !contentType.includes('application/json')) {
             target.innerHTML = '<div class="info-card"><div class="info-label">Result</div><div class="info-value">Not authenticated. Use Sign In first.</div></div>';
+            welcomeDiv.style.display = 'none';
             return;
         }
 
         const data = await res.json();
+        
+        // Display welcome message based on auth scheme
+        let welcomeMessage = '';
+        let welcomeClass = '';
+        
+        if (data.authScheme === 'Internal') {
+            welcomeMessage = `Welcome Internal User! 👋`;
+            welcomeClass = 'welcome-internal';
+        } else {
+            welcomeMessage = `Welcome External Client User! 👋`;
+            welcomeClass = 'welcome-external';
+        }
+        
+        welcomeDiv.innerHTML = `<div class="${welcomeClass}">${welcomeMessage}</div>`;
+        welcomeDiv.style.display = 'block';
+        
         target.innerHTML = `
             <div class="info-card">
                 <div class="info-label">Authenticated User</div>
                 <div class="info-value">${data.name || 'Unknown'}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Auth Scheme</div>
+                <div class="info-value">${data.authScheme}</div>
             </div>
             <div class="info-card">
                 <div class="info-label">Roles</div>
@@ -107,6 +129,7 @@ async function loadCurrentUser() {
         `;
     } catch (err) {
         target.innerHTML = '<div class="info-card"><div class="info-label">Error</div><div class="info-value">Unable to call /api/me.</div></div>';
+        welcomeDiv.style.display = 'none';
     }
 }
 
