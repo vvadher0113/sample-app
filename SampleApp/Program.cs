@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,12 +35,64 @@ if (!string.IsNullOrWhiteSpace(keyVaultUrl))
 const string internalOidcScheme = "InternalOidc";
 const string externalOidcScheme = "ExternalOidc";
 
-var internalEntraSection = builder.Configuration.GetSection("EntraInternal");
-var externalEntraSection = builder.Configuration.GetSection("EntraExternalId");
-var internalInstance = internalEntraSection["Instance"]?.TrimEnd('/');
-var internalTenantId = internalEntraSection["TenantId"];
-var ciamInstance = externalEntraSection["Instance"]?.TrimEnd('/');
-var ciamTenantId = externalEntraSection["TenantId"];
+string? GetSetting(params string[] keys)
+{
+    foreach (var key in keys)
+    {
+        var value = builder.Configuration[key];
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            continue;
+        }
+
+        // Ignore placeholder values from appsettings templates.
+        if (value.Contains('<') || value.Contains('>'))
+        {
+            continue;
+        }
+
+        return value;
+    }
+
+    return null;
+}
+
+string NormalizeAuthPath(string? value, string fallback)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return fallback;
+    }
+
+    var trimmed = value.Trim();
+    if (Uri.TryCreate(trimmed, UriKind.Absolute, out var absoluteUri))
+    {
+        trimmed = absoluteUri.AbsolutePath;
+    }
+
+    if (!trimmed.StartsWith('/'))
+    {
+        trimmed = "/" + trimmed;
+    }
+
+    return trimmed;
+}
+
+var internalInstance = GetSetting("EntraInternal:Instance", "AzureAdInternal:Instance")?.TrimEnd('/');
+var internalTenantId = GetSetting("EntraInternal:TenantId", "AzureAdInternal:TenantId");
+var internalClientId = GetSetting("EntraInternal:ClientId", "AzureAdInternal:ClientId");
+var internalClientSecret = GetSetting("EntraInternal:ClientSecret", "AzureAdInternal:ClientSecret");
+var internalCallbackPath = NormalizeAuthPath(GetSetting("EntraInternal:CallbackPath", "AzureAdInternal:CallbackPath"), "/signin-oidc-internal");
+var internalSignedOutPath = NormalizeAuthPath(GetSetting("EntraInternal:SignedOutCallbackPath", "AzureAdInternal:SignedOutCallbackPath"), "/signout-callback-oidc");
+
+var externalInstance = GetSetting("EntraExternalId:Instance", "AzureAdB2C:Instance", "AzureAd:Instance");
+var externalDomain = GetSetting("EntraExternalId:Domain", "AzureAdB2C:Domain", "AzureAd:Domain");
+var externalTenantId = GetSetting("EntraExternalId:TenantId", "AzureAdB2C:TenantId", "AzureAd:TenantId");
+var externalClientId = GetSetting("EntraExternalId:ClientId", "AzureAdB2C:ClientId", "AzureAd:ClientId");
+var externalClientSecret = GetSetting("EntraExternalId:ClientSecret", "AzureAdB2C:ClientSecret", "AzureAd:ClientSecret");
+var externalPolicyId = GetSetting("EntraExternalId:SignUpSignInPolicyId", "AzureAdB2C:SignUpSignInPolicyId", "AzureAd:SignUpSignInPolicyId");
+var externalCallbackPath = NormalizeAuthPath(GetSetting("EntraExternalId:CallbackPath", "AzureAdB2C:CallbackPath", "AzureAd:CallbackPath"), "/signin-oidc");
+var externalSignedOutPath = NormalizeAuthPath(GetSetting("EntraExternalId:SignedOutCallbackPath", "AzureAdB2C:SignedOutCallbackPath", "AzureAd:SignedOutCallbackPath"), "/signout-callback-oidc");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -52,15 +105,14 @@ var authBuilder = builder.Services.AddAuthentication(options =>
 
 authBuilder.AddMicrosoftIdentityWebApp(options =>
     {
-        externalEntraSection.Bind(options);
-
-        if (!string.IsNullOrWhiteSpace(ciamInstance) && !string.IsNullOrWhiteSpace(ciamTenantId))
-        {
-            var authority = $"{ciamInstance}/{ciamTenantId}/v2.0";
-            options.Authority = authority;
-            options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
-        }
-
+        options.Instance = externalInstance;
+        options.Domain = externalDomain;
+        options.TenantId = externalTenantId;
+        options.ClientId = externalClientId;
+        options.ClientSecret = externalClientSecret;
+        options.SignUpSignInPolicyId = externalPolicyId;
+        options.CallbackPath = externalCallbackPath;
+        options.SignedOutCallbackPath = externalSignedOutPath;
         options.TokenValidationParameters.RoleClaimType = "roles";
     },
     openIdConnectScheme: externalOidcScheme,
@@ -69,10 +121,10 @@ authBuilder.AddMicrosoftIdentityWebApp(options =>
 authBuilder.AddOpenIdConnect(internalOidcScheme, options =>
 {
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.ClientId = internalEntraSection["ClientId"];
-    options.ClientSecret = internalEntraSection["ClientSecret"];
-    options.CallbackPath = internalEntraSection["CallbackPath"] ?? "/signin-oidc-internal";
-    options.SignedOutCallbackPath = internalEntraSection["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+    options.ClientId = internalClientId;
+    options.ClientSecret = internalClientSecret;
+    options.CallbackPath = internalCallbackPath;
+    options.SignedOutCallbackPath = internalSignedOutPath;
     options.ResponseType = "code";
     options.SaveTokens = true;
 
@@ -125,20 +177,58 @@ app.UseAuthorization();
 
 app.MapGet("/auth/signin/internal", async (HttpContext context, string? returnUrl) =>
 {
-    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
-    await context.ChallengeAsync(internalOidcScheme, new AuthenticationProperties
+    if (string.IsNullOrWhiteSpace(internalClientId) || string.IsNullOrWhiteSpace(internalTenantId))
     {
-        RedirectUri = redirectUrl
-    });
+        return Results.Problem(
+            title: "Internal authentication is not configured",
+            detail: "Set EntraInternal__ClientId and EntraInternal__TenantId in App Service settings.",
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
+
+    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+    try
+    {
+        await context.ChallengeAsync(internalOidcScheme, new AuthenticationProperties
+        {
+            RedirectUri = redirectUrl
+        });
+        return Results.Empty;
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(
+            title: "Internal sign-in failed",
+            detail: ex.Message,
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
 });
 
 app.MapGet("/auth/signin/external", async (HttpContext context, string? returnUrl) =>
 {
-    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
-    await context.ChallengeAsync(externalOidcScheme, new AuthenticationProperties
+    if (string.IsNullOrWhiteSpace(externalClientId))
     {
-        RedirectUri = redirectUrl
-    });
+        return Results.Problem(
+            title: "External authentication is not configured",
+            detail: "Set EntraExternalId__ClientId in App Service settings.",
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
+
+    var redirectUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl;
+    try
+    {
+        await context.ChallengeAsync(externalOidcScheme, new AuthenticationProperties
+        {
+            RedirectUri = redirectUrl
+        });
+        return Results.Empty;
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(
+            title: "External sign-in failed",
+            detail: ex.Message,
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
 });
 
 app.MapGet("/auth/signin", async (HttpContext context, string? returnUrl) =>
@@ -152,7 +242,15 @@ app.MapGet("/auth/signin", async (HttpContext context, string? returnUrl) =>
 
 app.MapGet("/auth/signout", async (HttpContext context) =>
 {
-    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    try
+    {
+        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+    catch
+    {
+        // Best effort signout for local cookie only.
+    }
+
     context.Response.Redirect("/");
 });
 
