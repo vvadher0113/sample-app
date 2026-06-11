@@ -1,0 +1,8 @@
+<step title="Incoming Request" date="2026-05-09T02:33:02.800" instance="b1e9d1" url="/api/deployments/latest?deployer=OneDeploy&amp;time=2026-05-09_02-32-56Z" method="GET" type="request" pid="831,1,14" Host="virtix-sampleapp.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_92326072599e24fd1a408f98583b7e99bacd2497fc825f478ca1ae1e0aa1e31a_v3.0.8" Authorization="Bea..." Content-Type="application/json; charset=utf-8" Cookie="ARRAffinity=b1e9d10584b31da0b23c7a22e0724eb8e8a12cfa202aed7225c38439032ad6ac; ARRAffinitySameSite=b1e9d10584b31da0b23c7a22e0724eb8e8a12cfa202aed7225c38439032ad6ac" Content-Length="0" X-ARR-LOG-ID="16896b87-8be0-49ee-9410-f95a64eac1d5" CLIENT-IP="172.183.135.148:5169" X-SITE-DEPLOYMENT-ID="virtix-sampleapp" WAS-DEFAULT-HOSTNAME="virtix-sampleapp.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=OneDeploy&amp;time=2026-05-09_02-32-56Z" X-Client-IP="172.183.135.148" X-Client-Port="5169" >
+  <step title="DeploymentService.GetResult" date="2026-05-09T02:33:02.808" >
+    <step title="DeploymentService.GetLatestDeployment" date="2026-05-09T02:33:02.812" >
+      <step title="DeploymentManager.GetResults" date="2026-05-09T02:33:02.815" /><!-- duration: 592ms -->
+    </step><!-- duration: 597ms -->
+  </step><!-- duration: 602ms -->
+  <step title="Outgoing response" date="2026-05-09T02:33:03.413" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 5ms -->
+</step><!-- duration: 620ms -->

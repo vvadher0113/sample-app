@@ -1,0 +1,13 @@
+<step title="Incoming Request" date="2026-05-09T02:43:13.087" instance="b1e9d1" url="/api/publish?async=true&amp;deployer=GITHUB_ONE_DEPLOY&amp;type=zip&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%221f62de14b39fb96dfad108b36fedee60058140d1%22%2C%22repoName%22%3A%22vvadher0113%2Fsample-app%22%2C%22actor%22%3A%22vvadher0113%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Make%20Key%20Vault%20optional%20and%20fall%20back%20to%20environment%20variables%22%7D" method="POST" type="request" pid="831,1,23" Host="virtix-sampleapp.scm.azurewebsites.net" User-Agent="GITHUBACTIONS_DeployWebAppToAzure_92326072599e24fd1a408f98583b7e99bacd2497fc825f478ca1ae1e0aa1e31a_v3.0.8" Authorization="Bea..." Content-Type="application/octet-stream" Cookie="ARRAffinity=b1e9d10584b31da0b23c7a22e0724eb8e8a12cfa202aed7225c38439032ad6ac; ARRAffinitySameSite=b1e9d10584b31da0b23c7a22e0724eb8e8a12cfa202aed7225c38439032ad6ac" Transfer-Encoding="chunked" X-ARR-LOG-ID="c951431b-a709-44a7-ada5-e70ddcba4202" CLIENT-IP="20.83.174.59:42032" X-SITE-DEPLOYMENT-ID="virtix-sampleapp" WAS-DEFAULT-HOSTNAME="virtix-sampleapp.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?async=true&amp;deployer=GITHUB_ONE_DEPLOY&amp;type=zip&amp;message=%7B%22type%22%3A%22deployment%22%2C%22sha%22%3A%221f62de14b39fb96dfad108b36fedee60058140d1%22%2C%22repoName%22%3A%22vvadher0113%2Fsample-app%22%2C%22actor%22%3A%22vvadher0113%22%2C%22slotName%22%3A%22production%22%2C%22commitMessage%22%3A%22Make%20Key%20Vault%20optional%20and%20fall%20back%20to%20environment%20variables%22%7D" X-Client-IP="20.83.174.59" X-Client-Port="42032" >
+  <step title="OneDeploy" date="2026-05-09T02:43:13.097" >
+    <step title="Starting PushDeployAsync" date="2026-05-09T02:43:13.103" /><!-- duration: 5ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/ec3c9fdc-a057-4c82-ae1f-fea4ef83f8da.zip" date="2026-05-09T02:43:13.113" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/ec3c9fdc-a057-4c82-ae1f-fea4ef83f8da.zip" date="2026-05-09T02:43:13.115" /><!-- duration: 6ms -->
+    </step><!-- duration: 38ms -->
+    <step title="Start deployment in the background" date="2026-05-09T02:43:13.158" >
+      <step title="Acquiring Deployment Lock" date="2026-05-09T02:43:13.162" /><!-- duration: 1ms -->
+      <step title="Acquired Deployment Lock" date="2026-05-09T02:43:13.193" /><!-- duration: 1ms -->
+    </step><!-- duration: 83ms -->
+  </step><!-- duration: 145ms -->
+  <step title="Outgoing response" date="2026-05-09T02:43:13.244" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 1ms -->
+</step><!-- duration: 160ms -->

@@ -1,0 +1,151 @@
+2026-05-09T00:57:03.9866810Z State: Starting, Action: EstablishingSiteNetworks, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-09T00:57:09.8377603Z State: Starting, Action: StartingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-09T00:57:09.8386351Z Container start method called.
+2026-05-09T00:57:09.8475399Z State: Starting, Action: PullingImage, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pulling image 10.1.0.5:13209/appsvc/dotnetcore:8.0_20260311.2.tuxprod for virtix-sampleapp., DetailsLevel: INFO
+2026-05-09T00:57:09.8486613Z Establishing network.
+2026-05-09T00:57:09.8661640Z Pulling image: appsvc/dotnetcore:8.0_20260311.2.tuxprod.
+2026-05-09T00:57:10.8519994Z Container is starting.
+2026-05-09T00:57:10.8524678Z State: Starting, Action: MountingVolumes, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Mounting volumes for virtix-sampleapp., DetailsLevel: INFO
+2026-05-09T00:57:10.8526369Z Establishing user namespace if not established already.
+2026-05-09T00:57:10.8530625Z Establishing network if not established already.
+2026-05-09T00:57:10.8621032Z Mounting volumes.
+2026-05-09T00:57:10.8717731Z Nested mountpoint 
+2026-05-09T00:57:11.0006771Z Nested mountpoint volatile/logs
+2026-05-09T00:57:11.0310007Z Nested mountpoint 
+2026-05-09T00:57:11.4170371Z Nested mountpoint 
+2026-05-09T00:57:11.4460947Z Nested mountpoint 
+2026-05-09T00:57:12.5247996Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Finished pulling container image and mounting volumes for virtix-sampleapp. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-05-09T00:57:12.5316251Z Creating container.
+2026-05-09T00:57:12.5326147Z Creating pipes for streaming container io.
+2026-05-09T00:57:12.5329453Z Creating stdout named pipe at /podr/container/pipe/be0c15728487_virtix-sampleapp/stdout_2c62096b91854d11b6c2afaf582d3311.
+2026-05-09T00:57:12.5341947Z Successfully created stdout named pipe at: /podr/container/pipe/be0c15728487_virtix-sampleapp/stdout_2c62096b91854d11b6c2afaf582d3311.
+2026-05-09T00:57:12.5343993Z Opening named pipe /podr/container/pipe/be0c15728487_virtix-sampleapp/stdout_2c62096b91854d11b6c2afaf582d3311 for reading in non-blocking mode.
+2026-05-09T00:57:12.5350866Z Successfully opened named pipe: /podr/container/pipe/be0c15728487_virtix-sampleapp/stdout_2c62096b91854d11b6c2afaf582d3311.
+2026-05-09T00:57:12.6132026Z Successfully removed non-blocking flag from /podr/container/pipe/be0c15728487_virtix-sampleapp/stdout_2c62096b91854d11b6c2afaf582d3311.
+2026-05-09T00:57:12.6228033Z Creating stderr named pipe at /podr/container/pipe/be0c15728487_virtix-sampleapp/stderr_9a19d345c3aa4307a7e5aa5194286692.
+2026-05-09T00:57:12.6257027Z Successfully created stderr named pipe at: /podr/container/pipe/be0c15728487_virtix-sampleapp/stderr_9a19d345c3aa4307a7e5aa5194286692.
+2026-05-09T00:57:12.6437607Z Opening named pipe /podr/container/pipe/be0c15728487_virtix-sampleapp/stderr_9a19d345c3aa4307a7e5aa5194286692 for reading in non-blocking mode.
+2026-05-09T00:57:12.6521238Z Successfully opened named pipe: /podr/container/pipe/be0c15728487_virtix-sampleapp/stderr_9a19d345c3aa4307a7e5aa5194286692.
+2026-05-09T00:57:12.6527749Z Successfully removed non-blocking flag from /podr/container/pipe/be0c15728487_virtix-sampleapp/stderr_9a19d345c3aa4307a7e5aa5194286692.
+2026-05-09T00:57:12.6843832Z Creating container with image: appsvc/dotnetcore:8.0_20260311.2.tuxprod from registry: 10.1.0.6:13209 and fully qualified image name: 10.1.0.6:13209/appsvc/dotnetcore:8.0_20260311.2.tuxprod
+2026-05-09T00:57:16.2123277Z Starting container: be0c15728487_virtix-sampleapp.
+2026-05-09T00:57:16.5596164Z Starting watchers and probes.
+2026-05-09T00:57:16.7083100Z Starting metrics collection.
+2026-05-09T00:57:16.7670820Z Container is running.
+2026-05-09T00:57:16.7673118Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container virtix-sampleapp successfully created and is running., DetailsLevel: INFO
+2026-05-09T00:57:17.3882334Z Container start method finished after 7549 ms.
+2026-05-09T00:57:17.3888341Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container virtix-sampleapp successfully created and is running., DetailsLevel: INFO
+2026-05-09T00:57:17.3889127Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-05-09T00:58:16.5518120Z Site startup probe succeeded after 59.0046848 seconds.
+2026-05-09T00:58:17.0152634Z State: Starting, Action: WarmUpProbeSucceeded, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site startup probe succeeded after 59.0046848 seconds., DetailsLevel: INFO
+2026-05-09T00:58:17.8134609Z Site is running with deployment version: a51f6b72-f013-458f-a251-c58e63b3f3bb
+2026-05-09T00:58:17.8242684Z Site started.
+2026-05-09T00:58:17.8246375Z State: Started, Action: None, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 00:58:17 (UTC), DetailsLevel: INFO
+2026-05-09T00:58:17.9624816Z Site is running with patch version DOTNETCORE 8.0.25
+2026-05-09T01:12:30.0445207Z State: Starting, Action: EstablishingSiteNetworks, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-09T01:12:33.6609602Z State: Starting, Action: StartingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-09T01:12:33.6614652Z Container start method called.
+2026-05-09T01:12:33.6702401Z State: Starting, Action: PullingImage, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pulling image 10.1.0.6:13209/appsvc/dotnetcore:8.0_20260311.2.tuxprod for virtix-sampleapp., DetailsLevel: INFO
+2026-05-09T01:12:33.6709981Z Establishing network.
+2026-05-09T01:12:33.6803680Z Pulling image: appsvc/dotnetcore:8.0_20260311.2.tuxprod.
+2026-05-09T01:12:35.3419805Z Container is starting.
+2026-05-09T01:12:35.3420787Z State: Starting, Action: MountingVolumes, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Mounting volumes for virtix-sampleapp., DetailsLevel: INFO
+2026-05-09T01:12:35.3425851Z Establishing user namespace if not established already.
+2026-05-09T01:12:35.3427694Z Establishing network if not established already.
+2026-05-09T01:12:35.3429460Z Mounting volumes.
+2026-05-09T01:12:35.3433976Z Nested mountpoint 
+2026-05-09T01:12:35.3818466Z Nested mountpoint volatile/logs
+2026-05-09T01:12:35.4016094Z Nested mountpoint 
+2026-05-09T01:12:35.4243272Z Nested mountpoint 
+2026-05-09T01:12:35.4832604Z Nested mountpoint 
+2026-05-09T01:12:36.0540270Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Finished pulling container image and mounting volumes for virtix-sampleapp. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-05-09T01:12:36.0543314Z Creating container.
+2026-05-09T01:12:36.0544811Z Creating pipes for streaming container io.
+2026-05-09T01:12:36.0546804Z Creating stdout named pipe at /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stdout_5f5b8d85e912474e8ba082592ba6d5fb.
+2026-05-09T01:12:36.0550741Z Successfully created stdout named pipe at: /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stdout_5f5b8d85e912474e8ba082592ba6d5fb.
+2026-05-09T01:12:36.0551870Z Opening named pipe /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stdout_5f5b8d85e912474e8ba082592ba6d5fb for reading in non-blocking mode.
+2026-05-09T01:12:36.0553247Z Successfully opened named pipe: /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stdout_5f5b8d85e912474e8ba082592ba6d5fb.
+2026-05-09T01:12:36.0554176Z Successfully removed non-blocking flag from /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stdout_5f5b8d85e912474e8ba082592ba6d5fb.
+2026-05-09T01:12:36.0749139Z Creating stderr named pipe at /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stderr_55bdee7680b546b28fae5e57bbe3bec3.
+2026-05-09T01:12:36.0756140Z Successfully created stderr named pipe at: /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stderr_55bdee7680b546b28fae5e57bbe3bec3.
+2026-05-09T01:12:36.0835814Z Opening named pipe /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stderr_55bdee7680b546b28fae5e57bbe3bec3 for reading in non-blocking mode.
+2026-05-09T01:12:36.0854112Z Successfully opened named pipe: /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stderr_55bdee7680b546b28fae5e57bbe3bec3.
+2026-05-09T01:12:36.1139547Z Successfully removed non-blocking flag from /podr/container/pipe/46ea21c72ce6_virtix-sampleapp/stderr_55bdee7680b546b28fae5e57bbe3bec3.
+2026-05-09T01:12:36.1143366Z Creating container with image: appsvc/dotnetcore:8.0_20260311.2.tuxprod from registry: 10.1.0.6:13209 and fully qualified image name: 10.1.0.6:13209/appsvc/dotnetcore:8.0_20260311.2.tuxprod
+2026-05-09T01:12:38.0315421Z Starting container: 46ea21c72ce6_virtix-sampleapp.
+2026-05-09T01:12:38.1836691Z Starting watchers and probes.
+2026-05-09T01:12:38.1843087Z Starting metrics collection.
+2026-05-09T01:12:38.1847764Z Container is running.
+2026-05-09T01:12:38.1849343Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container virtix-sampleapp successfully created and is running., DetailsLevel: INFO
+2026-05-09T01:12:38.9747679Z Container start method finished after 5274 ms.
+2026-05-09T01:12:38.9751611Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container virtix-sampleapp successfully created and is running., DetailsLevel: INFO
+2026-05-09T01:12:38.9751930Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-05-09T01:13:49.5100253Z Site startup probe succeeded after 70.5328003 seconds.
+2026-05-09T01:13:49.8516014Z State: Starting, Action: WarmUpProbeSucceeded, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site startup probe succeeded after 70.5328003 seconds., DetailsLevel: INFO
+2026-05-09T01:13:50.4889757Z Site is running with deployment version: a51f6b72-f013-458f-a251-c58e63b3f3bb
+2026-05-09T01:13:50.4992214Z Site started.
+2026-05-09T01:13:50.5001767Z State: Started, Action: None, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 01:13:50 (UTC), DetailsLevel: INFO
+2026-05-09T01:13:50.5094894Z Site is running with patch version DOTNETCORE 8.0.25
+2026-05-09T01:14:10.6224168Z State: Stopping, Action: StoppingSite, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 00:58:17 (UTC), DetailsLevel: INFO
+2026-05-09T01:14:10.6346331Z State: Stopping, Action: StoppingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 00:58:17 (UTC), DetailsLevel: INFO
+2026-05-09T01:14:10.6359938Z Container is terminating. Grace period: 5 seconds.
+2026-05-09T01:14:10.6525473Z Stop and delete container. Retry count = 0
+2026-05-09T01:14:10.6526696Z Stopping container: be0c15728487_virtix-sampleapp.
+2026-05-09T01:14:15.8385820Z Deleting container: be0c15728487_virtix-sampleapp. Retry count = 0
+2026-05-09T01:14:16.0720571Z Container spec TerminationMessagePolicy  path 
+2026-05-09T01:14:16.0724899Z Container is terminated. Total time elapsed: 5436 ms.
+2026-05-09T01:14:16.0793591Z Site: virtix-sampleapp stopped.
+2026-05-09T01:14:16.6560812Z State: Stopping, Action: StoppingSite, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 01:13:50 (UTC), DetailsLevel: INFO
+2026-05-09T01:14:16.6753362Z State: Stopping, Action: StoppingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 01:13:50 (UTC), DetailsLevel: INFO
+2026-05-09T01:14:16.6768491Z Container is terminating. Grace period: 5 seconds.
+2026-05-09T01:14:16.6927033Z Stop and delete container. Retry count = 0
+2026-05-09T01:14:16.6932961Z Stopping container: 46ea21c72ce6_virtix-sampleapp.
+2026-05-09T01:14:21.9151443Z Deleting container: 46ea21c72ce6_virtix-sampleapp. Retry count = 0
+2026-05-09T01:14:22.1123862Z Container spec TerminationMessagePolicy  path 
+2026-05-09T01:14:22.1126186Z Container is terminated. Total time elapsed: 5435 ms.
+2026-05-09T01:14:22.1127892Z Site: virtix-sampleapp stopped.
+2026-05-09T01:14:23.1915424Z State: Starting, Action: EstablishingSiteNetworks, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-09T01:14:24.5272875Z State: Starting, Action: StartingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-09T01:14:24.5274362Z Container start method called.
+2026-05-09T01:14:24.5354220Z State: Starting, Action: PullingImage, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pulling image 10.1.0.5:13209/appsvc/dotnetcore:8.0_20260311.2.tuxprod for virtix-sampleapp., DetailsLevel: INFO
+2026-05-09T01:14:24.5356081Z Establishing network.
+2026-05-09T01:14:24.5357655Z Pulling image: appsvc/dotnetcore:8.0_20260311.2.tuxprod.
+2026-05-09T01:14:24.9727904Z Image appsvc/dotnetcore:8.0_20260311.2.tuxprod is pulled from registry 10.1.0.5:13209
+2026-05-09T01:14:24.9823006Z Container is starting.
+2026-05-09T01:14:24.9823885Z State: Starting, Action: MountingVolumes, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Mounting volumes for virtix-sampleapp., DetailsLevel: INFO
+2026-05-09T01:14:24.9825254Z Establishing user namespace if not established already.
+2026-05-09T01:14:24.9826440Z Establishing network if not established already.
+2026-05-09T01:14:24.9827637Z Mounting volumes.
+2026-05-09T01:14:24.9908315Z Nested mountpoint 
+2026-05-09T01:14:25.0115615Z Nested mountpoint volatile/logs
+2026-05-09T01:14:25.0322662Z Nested mountpoint 
+2026-05-09T01:14:25.0516487Z Nested mountpoint 
+2026-05-09T01:14:25.0685379Z Nested mountpoint 
+2026-05-09T01:14:25.4541933Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Finished pulling container image and mounting volumes for virtix-sampleapp. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-05-09T01:14:25.4543066Z Creating container.
+2026-05-09T01:14:25.4544011Z Creating pipes for streaming container io.
+2026-05-09T01:14:25.4544903Z Creating stdout named pipe at /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stdout_a39a67c8531c4b71aae653190a633c13.
+2026-05-09T01:14:25.4618466Z Successfully created stdout named pipe at: /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stdout_a39a67c8531c4b71aae653190a633c13.
+2026-05-09T01:14:25.4619651Z Opening named pipe /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stdout_a39a67c8531c4b71aae653190a633c13 for reading in non-blocking mode.
+2026-05-09T01:14:25.4620836Z Successfully opened named pipe: /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stdout_a39a67c8531c4b71aae653190a633c13.
+2026-05-09T01:14:25.4621692Z Successfully removed non-blocking flag from /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stdout_a39a67c8531c4b71aae653190a633c13.
+2026-05-09T01:14:25.4626198Z Creating stderr named pipe at /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stderr_ad32d73fdc2e4ebfa9f28ea81b1c08b7.
+2026-05-09T01:14:25.4628828Z Successfully created stderr named pipe at: /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stderr_ad32d73fdc2e4ebfa9f28ea81b1c08b7.
+2026-05-09T01:14:25.4732473Z Opening named pipe /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stderr_ad32d73fdc2e4ebfa9f28ea81b1c08b7 for reading in non-blocking mode.
+2026-05-09T01:14:25.4734425Z Successfully opened named pipe: /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stderr_ad32d73fdc2e4ebfa9f28ea81b1c08b7.
+2026-05-09T01:14:25.4840559Z Successfully removed non-blocking flag from /podr/container/pipe/9423b8010ea6_virtix-sampleapp/stderr_ad32d73fdc2e4ebfa9f28ea81b1c08b7.
+2026-05-09T01:14:25.4842478Z Creating container with image: appsvc/dotnetcore:8.0_20260311.2.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/dotnetcore:8.0_20260311.2.tuxprod
+2026-05-09T01:14:26.4114504Z Starting container: 9423b8010ea6_virtix-sampleapp.
+2026-05-09T01:14:26.5516382Z Starting watchers and probes.
+2026-05-09T01:14:26.5589782Z Starting metrics collection.
+2026-05-09T01:14:26.5607511Z Container is running.
+2026-05-09T01:14:26.5715825Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container virtix-sampleapp successfully created and is running., DetailsLevel: INFO
+2026-05-09T01:14:26.8090868Z Container start method finished after 2281 ms.
+2026-05-09T01:14:26.8092942Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container virtix-sampleapp successfully created and is running., DetailsLevel: INFO
+2026-05-09T01:14:26.8093202Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-05-09T01:15:04.7015970Z Site startup probe succeeded after 37.8477605 seconds.
+2026-05-09T01:15:04.9401455Z State: Starting, Action: WarmUpProbeSucceeded, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site startup probe succeeded after 37.8477605 seconds., DetailsLevel: INFO
+2026-05-09T01:15:05.5344260Z Site is running with deployment version: a51f6b72-f013-458f-a251-c58e63b3f3bb
+2026-05-09T01:15:05.5346502Z Site started.
+2026-05-09T01:15:05.5347228Z State: Started, Action: None, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/09/2026 01:15:05 (UTC), DetailsLevel: INFO
+2026-05-09T01:15:05.6053117Z Site is running with patch version DOTNETCORE 8.0.25
